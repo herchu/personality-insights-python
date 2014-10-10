@@ -1,54 +1,163 @@
-import os, cherrypy
-#from Cheetah.Template import Template
+# Watson User Modeling demo application for Bluemix
+
+import os, cherrypy, requests, json
 from mako.template import Template
 from mako.lookup import TemplateLookup
 lookup = TemplateLookup(directories=['templates'])
 
-#from genshi.template import TemplateLoader
-#loader = TemplateLoader(
-#	os.path.join(os.path.dirname(__file__), 'templates'),
-#	auto_reload=True
-#)
 
-class DemoService(object):
+## Helper function to flatten a hierarchy of traits returned by the
+## User Modeling service, to be displayed in a raw table
+def flattenPortrait(tree):
+	arr = []
+	def f(t, level):
+		if t is None:
+			return None;
+		if level>0 and (("children" not in t) or level!=2):
+			arr.append({
+				"id"   : t["id"],
+				"title": ("children" in t),
+				"value": "%d%%" % int(t["percentage"]*100) if "percentage" in t else "",
+			})
+		if "children" in t and t["id"]!='sbh':
+			for elem in t["children"]:
+				f(elem, level+1);
+	f(tree, 0)
+	return arr
+
+
+## This class implements a wrapper on the User Modeling service 
+class UserModelingService:	
+	url = None
+	API_PROFILE = "api/v2/profile"
+	API_VISUALIZATION = "api/v2/visualize"
 	
+	## Construct an instance. Fetches service parameters from VCAP_SERVICES
+	## runtime variable for Bluemix, or it defaults to local URLs.
+	def __init__(self, vcapServices):
+		if vcapServices is None:
+			print("No VCAP_SERVICES was given. Using defaults. This only works if you run User Modeling locally!")
+			self.url = "http://localhost:9080/systemu/";
+			self.user = "admin";
+			self.password = "admin";
+		else:
+			print("VCAP_SERVICES object found:", vcapServices)
+			services = json.loads(vcapServices)
+			svcName = 'systemudemoapisl-staging' #'user_modeling'			
+			if svcName in services:
+				print("User modeling service found!")
+				svc = services[svcName][0]['credentials']
+				self.url = svc['api_url'] if 'api_url' in svc else svc['url']
+				self.user = svc['user'] if 'user' in svc else svc['username']
+				self.password = svc['password']
+			else:
+				print("ERROR: No user modeling service was bound to this app!")
+
+	## Builds the content object to send to User Modeling API from a 
+	## single piece of text
+	def _formatPOSTData(self, text):
+		return {
+			'contentItems' : [{ 
+				'userid' : 'dummy',
+				'id' : 'dummyUuid',
+				'sourceid' : 'freetext',
+				'contenttype' : 'text/plain',
+				'language' : 'en',
+				'content': text
+				}]
+		};
+
+	## Calls the User Modeling API to analyze a piece of text and obtain
+	## Personality, Values and Needs traits.
+	def requestPortrait(self, text):
+		if self.url is None:
+			raise Exception("No User Modeling service is bound to this app")
+		data = self._formatPOSTData(text)
+		r = requests.post(self.url+self.API_PROFILE, 
+			auth=(self.user, self.password),
+			headers = {'content-type': 'application/json'},
+			data=json.dumps(data)
+		)
+		print("Profile Request sent. Status code: %d, content-type: %s" % (r.status_code, r.headers['content-type']))
+		if r.status_code!=200:
+			try:
+				error = json.loads(r.text)
+			except:
+				raise Exception("API error, http status code %d" % r.status_code)
+			raise Exception("API error %s: %s" % (error['error_code'], error['user_message']))
+		return json.loads(r.text)
+
+	## Builds a visualization of a portrait object, calling the visualize
+	## API in User Modeling
+	def requestVisualization(self, data):	
+		if self.url is None:
+			raise Exception("No User Modeling service is bound to this app")
+		r = requests.post(self.url+self.API_VISUALIZATION, 
+			auth=(self.user, self.password),
+			headers = {'content-type': 'application/json'},
+			data=json.dumps(data)
+		)
+		print("Viz Request sent. Status code: %d, content-type: %s" % (r.status_code, r.headers['content-type']))
+		if r.status_code==200:
+			return r.text
+		else:
+			return "Error building visualization"
+			
+
+## REST service/app. Since we just have 1 GET and 1 POST URLs, there is not
+## even need to look at paths in the request. 
+## This class implements the handler API for cherrypy library.
+class DemoService(object):
 	exposed = True
-	def POST(self, content=None):
-#		tmpl = loader.load('index2.html')
-#		return tmpl.generate(
-#			output="Here is the output",
-#			error=None
-#		).render('html', doctype='html')
-		return "ok post"
 		
+	def __init__(self, service):
+		self.service = service
+
+	## GET handler, just shows the default page with sample text content
 	def GET(self):
-		tmpl = lookup.get_template("index2.html")
-		return tmpl.render(output="this is output", error="Hola")
-        
-#		tmpl = loader.load('index2.html')
-#		return tmpl.generate(
-#			output=None,
-#			error=None
-#		).render('html', doctype='html')
-		#return "ok get w/mako"
+		return lookup.get_template("index.html").render(content="")
+
+	## Receives text content posted in the UI, posts it to User Modeling
+	## and builds a table with the results and the visualization
+	def POST(self, content=None):
+		traits, error, viz = (None, None, None)
+		try:
+			# Request analysis from User Modeling API
+			portrait = self.service.requestPortrait(content)
+			# Flatten the returned JSON tree into an array to display a table
+			traits = flattenPortrait(portrait["tree"])
+			# Get a visualiation in HTML to be embedded in the page
+			viz = self.service.requestVisualization(portrait)
+		except Exception as e:
+			error = e.message
+		# Render response
+		tmpl = lookup.get_template("index.html")
+		return tmpl.render(
+			content=content,
+			traits=traits,
+			error=error,
+			viz=viz
+		)
+		
 		
 if __name__ == '__main__':
+	# Wrapper for User Modeling service
+	userModeling = UserModelingService(os.getenv('VCAP_SERVICES'))
+
+	# Get host/port from the Bluemix environment, or default to local
 	HOST_NAME = os.getenv('VCAP_APP_HOST', '127.0.0.1')
 	PORT_NUMBER = int(os.getenv('VCAP_APP_PORT', '9999'))
-	
 	cherrypy.config.update({
 		'server.socket_host': HOST_NAME,
 		'server.socket_port': PORT_NUMBER,
 	}) 
+
+	# Configure 2 paths: "static" for all JS/CSS content, and everything
+	# else in "/" handled by the DemoService
 	conf = {
-#		'/': {
-#			'tools.sessions.on': True,
-#			'tools.staticdir.root': os.path.abspath(os.getcwd())
-#		},
 		"/": {
 			'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
 			'tools.response_headers.on': True,
-#			'tools.response_headers.headers': [('Content-Type', 'text/plain')],
 			'tools.staticdir.root': os.path.abspath(os.getcwd())
 		},
 		'/static': {
@@ -57,5 +166,6 @@ if __name__ == '__main__':
 		}
     }
 
+	# Start the server
 	print("Listening on %s:%d" % (HOST_NAME, PORT_NUMBER))
-	cherrypy.quickstart(DemoService(), "/", config=conf)
+	cherrypy.quickstart(DemoService(userModeling), "/", config=conf)
