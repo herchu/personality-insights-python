@@ -1,6 +1,10 @@
 import os, cherrypy
-#from genshi.template import TemplateLoader
+#from Cheetah.Template import Template
+from mako.template import Template
+from mako.lookup import TemplateLookup
+lookup = TemplateLookup(directories=['templates'])
 
+#from genshi.template import TemplateLoader
 #loader = TemplateLoader(
 #	os.path.join(os.path.dirname(__file__), 'templates'),
 #	auto_reload=True
@@ -18,12 +22,15 @@ class DemoService(object):
 		return "ok post"
 		
 	def GET(self):
+		tmpl = lookup.get_template("index2.html")
+		return tmpl.render(output="this is output", error="Hola")
+        
 #		tmpl = loader.load('index2.html')
 #		return tmpl.generate(
 #			output=None,
 #			error=None
 #		).render('html', doctype='html')
-		return "ok get"
+		#return "ok get w/mako"
 		
 if __name__ == '__main__':
 	HOST_NAME = os.getenv('VCAP_APP_HOST', '127.0.0.1')
