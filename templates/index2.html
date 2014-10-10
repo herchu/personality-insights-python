@@ -1,0 +1,74 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://genshi.edgewall.org/">
+<head>
+<title>User Modeling Python Starter Application</title>
+<meta charset="utf-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="shortcut icon" href="static/images/favicon.ico" type="image/x-icon"/>
+<link rel="icon" href="static/images/favicon.ico" type="image/x-icon"/>
+<link rel="stylesheet" href="static/css/watson-bootstrap-dark.css"/>
+<link rel="stylesheet" href="static/css/browser-compatibility.css"/>
+<link rel="stylesheet" href="static/css/watson-code.css"/>
+<link rel="stylesheet" href="static/css/style.css"/>
+</head>
+<body>
+<div class="container">
+	<div class="header row">
+		<div class="col-lg-3">
+			<img src="static/images/app.png"/>
+		</div>
+		<div class="col-lg-8">
+			<h1>User Modeling Python Starter Application</h1>
+			<p>The User Modeling service uses linguistic analytics to
+				extract a spectrum of cognitive and social characteristics from the
+				text data that a person generates through text messages, tweets,
+				posts, and more.</p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-6">
+			<h2>Try the service</h2>
+			<div class="well">
+				<form method="post" class="form-horizontal"  action="/">
+					<fieldset>
+						<div class="form-group row">
+							<div class="col-lg-12">
+								<textarea id="textArea" name="content" rows="12"
+									placeholder="Please enter the text to analyze..."
+									class="form-control"></textarea>
+							</div>
+						</div>
+						<div style="margin-bottom: 0px; padding-top: 5px;"
+							class="form-group row">
+							<div class="col-lg-4 col-lg-push-8">
+								<button type="submit" class="btn btn-block">Analyze</button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+		<div class="col-lg-6">
+			<h2>Output</h2>
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="well" py:if="output">
+						$output
+					</div>
+					<div class="well" py:if="error">
+						<p style="font-weight:bold;color:red;">Error: $error</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="static/js/css_browser_selector.js"></script>
+<script type="text/javascript" src="static/js/dummy-text.js"></script>
+<script type="text/javascript">
+		window.onload = function() {
+			document.getElementById('textArea').value = dummy_text;
+	}
+</script>
+</body>
+</html>
