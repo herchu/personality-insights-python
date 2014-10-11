@@ -1,6 +1,8 @@
 # watson-usermodeling-python
 
-[https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/systemuapi/index.html](IBM Watson User Modeling) sample Python application.
+IBM Watson User Modeling sample Python application.
+
+Read more about User Modeling here:  https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/systemuapi/index.html
 
 This is a sample application that uses the User Modeling service from [IBM Bluemix](http://bluemix.net).
 It is just meant to describe how you can use Python to connect to the Watson services; not as a real world
