@@ -4,11 +4,13 @@ IBM Watson User Modeling sample Python application.
 
 Read more about User Modeling here:  https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/systemuapi/index.html
 
+See this application running in http://um-pyton.mybluemix.net
+
 This is a sample application that uses the User Modeling service from [IBM Bluemix](http://bluemix.net).
 It is just meant to describe how you can use Python to connect to the Watson services; not as a real world
 application. Everyone is welcome to fork the repository or reuse this example code.
 
-See this application running in http://um-pyton.mybluemix.net
+*NOTE This is not an officially supported application from the Watson Services -- it just provided "as is" for developers to find example Python code working with User Modeling and Bluemix.*
 
 ## Notes
 
