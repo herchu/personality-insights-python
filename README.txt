@@ -3,15 +3,15 @@
 
 ## Files
 
-The User Modeling Ruby Sinatra starter application has files as below:
+The User Modeling Python starter application has files as below:
 
-*   app.rb
+*   server.py
 
-    This file contains Ruby code for your application written using Sinara API
+    This file contains all the Python code for your application.
 
-*   Gemfile
+*   requirements.txt
 
-    This includes all dependent Gem of your application
+    This lists the Python module dependencies for the Buemix buildpack.
 
 *   templates/
 

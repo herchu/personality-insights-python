@@ -43,7 +43,9 @@ class UserModelingService:
 		else:
 			print("VCAP_SERVICES object found:", vcapServices)
 			services = json.loads(vcapServices)
-			svcName = 'systemudemoapisl-staging' #'user_modeling'			
+			svcName = 'user_modeling'			
+			if svcName not in services:
+				svcName = 'systemudemoapisl-staging' # Try again, old name
 			if svcName in services:
 				print("User modeling service found!")
 				svc = services[svcName][0]['credentials']
@@ -129,7 +131,7 @@ class DemoService(object):
 			# Get a visualiation in HTML to be embedded in the page
 			viz = self.service.requestVisualization(portrait)
 		except Exception as e:
-			error = e.message
+			error = str(e)
 		# Render response
 		tmpl = lookup.get_template("index.html")
 		return tmpl.render(

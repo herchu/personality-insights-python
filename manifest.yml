@@ -1,7 +1,0 @@
-applications:
-- services:
-  - um-service
-  name: um-python
-  path: .
-
-  memory: 512M
