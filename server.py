@@ -1,4 +1,4 @@
-# Watson User Modeling demo application for Bluemix
+# Watson Personality Insights demo application for Bluemix
 
 import os, cherrypy, requests, json
 from mako.template import Template
@@ -7,7 +7,7 @@ lookup = TemplateLookup(directories=['templates'])
 
 
 ## Helper function to flatten a hierarchy of traits returned by the
-## User Modeling service, to be displayed in a raw table
+## Personality Insights service, to be displayed in a raw table
 def flattenPortrait(tree):
 	arr = []
 	def f(t, level):
@@ -26,36 +26,36 @@ def flattenPortrait(tree):
 	return arr
 
 
-## This class implements a wrapper on the User Modeling service 
-class UserModelingService:	
+## This class implements a wrapper on the Personality Insights service 
+class PersonalityInsightsService:	
 	url = None
-	API_PROFILE = "api/v2/profile"
-	API_VISUALIZATION = "api/v2/visualize"
+	API_PROFILE = "/v2/profile"
+	API_VISUALIZATION = "/v2/visualize"
 	
 	## Construct an instance. Fetches service parameters from VCAP_SERVICES
 	## runtime variable for Bluemix, or it defaults to local URLs.
 	def __init__(self, vcapServices):
 		if vcapServices is None:
-			print("No VCAP_SERVICES was given. Using defaults. This only works if you run User Modeling locally!")
-			self.url = "http://localhost:9080/systemu/";
-			self.user = "admin";
-			self.password = "admin";
+			print("No VCAP_SERVICES was given. Using defaults. Make sure you have a valid username/password!")
+			self.url = "https://gateway.watsonplatform.net/personality-insights/api";
+			self.user = "<username>";
+			self.password = "<password>";
 		else:
 			print("VCAP_SERVICES object found:", vcapServices)
 			services = json.loads(vcapServices)
-			svcName = 'user_modeling'			
-			if svcName not in services:
-				svcName = 'systemudemoapisl-staging' # Try again, old name
+			for svc in services:
+				print "* Found service from VCAP_SERVICES: %s" % svc
+			svcName = 'personality_insights'			
 			if svcName in services:
-				print("User modeling service found!")
+				print("Personality Insights service found!")
 				svc = services[svcName][0]['credentials']
-				self.url = svc['api_url'] if 'api_url' in svc else svc['url']
-				self.user = svc['user'] if 'user' in svc else svc['username']
+				self.url = svc['url']
+				self.user = svc['username']
 				self.password = svc['password']
 			else:
-				print("ERROR: No user modeling service was bound to this app!")
+				print("ERROR: No Personality Insights service was bound to this app!")
 
-	## Builds the content object to send to User Modeling API from a 
+	## Builds the content object to send to Personality Insights API from a 
 	## single piece of text
 	def _formatPOSTData(self, text):
 		return {
@@ -69,11 +69,11 @@ class UserModelingService:
 				}]
 		};
 
-	## Calls the User Modeling API to analyze a piece of text and obtain
+	## Calls the Personality Insights API to analyze a piece of text and obtain
 	## Personality, Values and Needs traits.
 	def requestPortrait(self, text):
 		if self.url is None:
-			raise Exception("No User Modeling service is bound to this app")
+			raise Exception("No Personality Insights service is bound to this app")
 		data = self._formatPOSTData(text)
 		r = requests.post(self.url+self.API_PROFILE, 
 			auth=(self.user, self.password),
@@ -90,10 +90,10 @@ class UserModelingService:
 		return json.loads(r.text)
 
 	## Builds a visualization of a portrait object, calling the visualize
-	## API in User Modeling
+	## API in Personality Insights
 	def requestVisualization(self, data):	
 		if self.url is None:
-			raise Exception("No User Modeling service is bound to this app")
+			raise Exception("No Personality Insights service is bound to this app")
 		r = requests.post(self.url+self.API_VISUALIZATION, 
 			auth=(self.user, self.password),
 			headers = {'content-type': 'application/json'},
@@ -119,17 +119,17 @@ class DemoService(object):
 	def GET(self):
 		return lookup.get_template("index.html").render(content="")
 
-	## Receives text content posted in the UI, posts it to User Modeling
+	## Receives text content posted in the UI, posts it to Personality Insights
 	## and builds a table with the results and the visualization
 	def POST(self, content=None):
 		traits, error, viz = (None, None, None)
 		try:
-			# Request analysis from User Modeling API
+			# Request analysis from Personality Insights API
 			portrait = self.service.requestPortrait(content)
 			# Flatten the returned JSON tree into an array to display a table
 			traits = flattenPortrait(portrait["tree"])
 			# Get a visualiation in HTML to be embedded in the page
-			viz = self.service.requestVisualization(portrait)
+#			viz = self.service.requestVisualization(portrait)
 		except Exception as e:
 			error = str(e)
 		# Render response
@@ -137,14 +137,14 @@ class DemoService(object):
 		return tmpl.render(
 			content=content,
 			traits=traits,
-			error=error,
-			viz=viz
+			error=error
+#			viz=viz
 		)
 		
 		
 if __name__ == '__main__':
-	# Wrapper for User Modeling service
-	userModeling = UserModelingService(os.getenv('VCAP_SERVICES'))
+	# Wrapper for Personality Insights service
+	pi = PersonalityInsightsService(os.getenv('VCAP_SERVICES'))
 
 	# Get host/port from the Bluemix environment, or default to local
 	HOST_NAME = os.getenv('VCAP_APP_HOST', '127.0.0.1')
@@ -170,4 +170,4 @@ if __name__ == '__main__':
 
 	# Start the server
 	print("Listening on %s:%d" % (HOST_NAME, PORT_NUMBER))
-	cherrypy.quickstart(DemoService(userModeling), "/", config=conf)
+	cherrypy.quickstart(DemoService(pi), "/", config=conf)

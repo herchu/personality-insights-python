@@ -1,9 +1,9 @@
-# User Modeling Python Starter Application
+# Personality Insights Python Starter Application
 
 
 ## Files
 
-The User Modeling Python starter application has files as below:
+The Personality Insights Python starter application has files as below:
 
 *   server.py
 

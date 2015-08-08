@@ -1,16 +1,16 @@
-# watson-usermodeling-python
+# watson-personality-insights-python
 
-IBM Watson User Modeling sample Python application.
+IBM Watson Personality Insights sample Python application.
 
-Read more about User Modeling here:  https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/systemuapi/index.html
+Read more about Personality Insights here:  https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/systemuapi/index.html
 
 See this application running in http://um-pyton.mybluemix.net
 
-This is a sample application that uses the User Modeling service from [IBM Bluemix](http://bluemix.net).
+This is a sample application that uses the Personality Insights service from [IBM Bluemix](http://bluemix.net).
 It is just meant to describe how you can use Python to connect to the Watson services; not as a real world
 application. Everyone is welcome to fork the repository or reuse this example code.
 
-*NOTE This is not an officially supported application from the Watson Services -- it just provided "as is" for developers to find example Python code working with User Modeling and Bluemix.*
+*NOTE This is not an officially supported application from the Watson Services -- it just provided "as is" for developers to find example Python code working with Personality Insights and Bluemix.*
 
 ## Notes
 
@@ -25,9 +25,9 @@ To deploy this app (assuming you have a Bluemix account and the `cf` tool correc
 ```
 cf push um-python -m 128M -b https://github.com/cloudfoundry/cf-buildpack-python.git -c "python server.py"
 ```
-If the app is deployed this way, one still needs to bind a User Modeling service -- this can be done in Bluemix UI.
+If the app is deployed this way, one still needs to bind a Personality Insights service -- this can be done in Bluemix UI.
 
-For this app, I have used `cherrypy` as http server (static pages and basic REST api), and the `mako` framework for rendering via templates. I also used `requests` to communicate with the User Modeling API. These are listed in `requirements.txt` for the buildpack to install them when the app is pushed onto Bluemix.
+For this app, I have used `cherrypy` as http server (static pages and basic REST api), and the `mako` framework for rendering via templates. I also used `requests` to communicate with the Personality Insights API. These are listed in `requirements.txt` for the buildpack to install them when the app is pushed onto Bluemix.
 
 ## License
 
